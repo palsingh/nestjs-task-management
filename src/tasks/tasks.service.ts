@@ -3,6 +3,7 @@ import { Task, TaskStatus } from './task.model';
 import { v4 as uuid } from 'uuid';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
+import { NotFoundException } from '@nestjs/common/exceptions';
 
 @Injectable()
 export class TasksService {
@@ -18,7 +19,7 @@ export class TasksService {
       id: uuid(),
       title,
       description,
-      status: 'OPEN',
+      status: TaskStatus.OPEN,
     };
 
     this.tasks.push(task);
@@ -27,11 +28,18 @@ export class TasksService {
   }
 
   getTaskById(id: string): Task {
-    return this.tasks.find((task) => task.id === id);
+    const found = this.tasks.find((task) => task.id === id);
+
+    if (!found) {
+      throw new NotFoundException();
+    }
+
+    return found;
   }
 
   deleteTask(id: string): void {
-    this.tasks = this.tasks.filter((task) => task.id !== id)
+    this.getTaskById(id);
+    this.tasks = this.tasks.filter((task) => task.id !== id);
   }
 
   updateTaskStatus(id, status: TaskStatus) {
